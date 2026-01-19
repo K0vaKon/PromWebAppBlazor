@@ -1,0 +1,29 @@
+﻿body{
+
+}
+
+.feedback-form {
+    align-items: center;
+}
+
+.feedback-input {
+    border-radius: 10px;
+    border: 1px solid #ccc;
+    padding: 10px;
+    width: 100%;
+}
+
+.btn-confirm {
+    display: inline-block;
+    text-align: center;
+    background: #75B06F;
+    color: black;
+    margin-bottom: 30px;
+    padding: 15px 30px;
+    border: none;
+    border-radius: 50px;
+    font-weight: bold;
+    cursor: pointer;
+    user-select: none;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+}
