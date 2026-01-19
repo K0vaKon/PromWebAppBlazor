@@ -16,12 +16,29 @@
 
 <body>
     <div id="app">
-        <svg class="loading-progress">
-            <circle r="40%" cx="50%" cy="50%" />
-            <circle r="40%" cx="50%" cy="50%" />
-        </svg>
-        <div class="loading-progress-text"></div>
+        <div style="display:flex; flex-direction:column; justify-content:center; align-items:center; height:100vh; background-color:#1a1a1a; color:#D4AF37; font-family:sans-serif;">
+            <div class="spinner"></div>
+            <div style="margin-top:20px; font-size:1.2rem; letter-spacing:2px;">VOORBEREIDING OP DE BAL...
+            </div>
+        </div>
     </div>
+
+    <style>
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(212, 175, 55, 0.3);
+            border-radius: 50%;
+            border-top-color: #D4AF37;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
 
     <div id="blazor-error-ui">
         An unhandled error has occurred.
