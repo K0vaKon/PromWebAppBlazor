@@ -1,0 +1,46 @@
+﻿@page "/"
+@using Microsoft.AspNetCore.Components.Forms
+
+<div id="WebApp">
+    <div id="HomeTop">
+        <h1>Welkom op de bal!</h1>
+    </div>
+    <div id="content">
+        <label class="btn-upload">
+            KIES EEN FOTO
+            <InputFile OnChange="HandleFileSelected" hidden accept="image/*" />
+        </label>
+        @if (imgSrc != null)
+        {
+            <div class="preview-animation">
+                <img src="@imgSrc" class="img-preview" />
+                <p class="photo-hint">Mooi foto!</p>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    private string? imgSrc;
+
+    // ЭТОТ МЕТОД ДОЛЖЕН БЫТЬ ЗДЕСЬ, ВНУТРИ @code
+    private async Task HandleFileSelected(InputFileChangeEventArgs e)
+    {
+        var imageFile = e.File;
+        if (imageFile != null)
+        {
+            // Уменьшаем фото для быстрой загрузки
+            var resizedFile = await imageFile.RequestImageFileAsync("image/png", 600, 600);
+
+            // Читаем файл в массив байтов
+            var buffer = new byte[resizedFile.Size];
+            await resizedFile.OpenReadStream(maxAllowedSize: 1024 * 1024 * 10).ReadAsync(buffer);
+
+            // Конвертируем в строку для показа на экране
+            imgSrc = $"data:image/png;base64,{Convert.ToBase64String(buffer)}";
+
+            // Принудительно обновляем интерфейс
+            StateHasChanged();
+        }
+    }
+}
