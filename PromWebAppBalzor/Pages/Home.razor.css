@@ -1,0 +1,56 @@
+﻿body {
+
+}
+
+.centralize {
+    display: flex; 
+    flex-direction: column; 
+    align-items: center;
+    justify-content: center; 
+    text-align: center; 
+}
+
+.loader-container {
+    margin-top: 50px;
+}
+
+.btn-confirm {
+    display: inline-block;
+    text-align: center;
+    background: #75B06F;
+    color: black;
+    margin-bottom: 30px;
+    padding: 15px 30px;
+    border: none;
+    border-radius: 50px;
+    font-weight: bold;
+    cursor: pointer;
+    text-align: center;
+    user-select: none;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+}
+
+.btn-confirm:active {
+    transform: scale(0.98);
+}
+
+.btn-cancel {
+    display: inline-block;
+    text-align: center;
+    background: #FF3838;
+    color: black;
+    margin-bottom: 30px;
+    padding: 15px 30px;
+    border: none;
+    border-radius: 50px;
+    font-weight: bold;
+    cursor: pointer;
+    text-align: center;
+    user-select: none;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+}
+
+.btn-cancel:active {
+    transform: scale(0.98);
+}
+

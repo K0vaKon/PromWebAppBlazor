@@ -101,7 +101,7 @@ h1:focus {
 }
 
 .btn-upload {
-    /* Эти свойства заставят обычный текст выглядеть как настоящая кнопка */
+   
     display: inline-block;
     text-align: center;
     background: linear-gradient(45deg, #D4AF37, #B8860B);
@@ -110,20 +110,18 @@ h1:focus {
     padding: 15px 30px;
     border-radius: 50px;
     font-weight: bold;
-    cursor: pointer; /* Появляется "палец" при наведении */
+    cursor: pointer; 
     text-align: center;
-    user-select: none; /* Чтобы текст нельзя было случайно выделить */
+    user-select: none;
     box-shadow: 0 4px 15px rgba(0,0,0,0.3);
 }
 
 .btn-upload:active {
-    transform: scale(0.98); /* Эффект нажатия */
+    transform: scale(0.98);
 }
 
 #WebApp {
     width: 100%;
-    /* Если ты хочешь, чтобы всё шло друг под другом, 
-       колонки лучше пока не ограничивать или использовать 1fr */
     display: grid;
     grid-template-columns: 1fr;
 }
