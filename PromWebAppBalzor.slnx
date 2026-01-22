@@ -1,4 +1,6 @@
 <Solution>
-  <Project Path="PromAPI/PromAPI.csproj" Id="e07cfd24-5a01-4fe6-9cb5-f4cc8d93dfc4" />
+  <Project Path="PromAPI/PromAPI.csproj" Id="e07cfd24-5a01-4fe6-9cb5-f4cc8d93dfc4">
+    <Build Solution="Debug|*" Project="false" />
+  </Project>
   <Project Path="PromWebAppBalzor/PromWebAppBalzor.csproj" />
 </Solution>

@@ -52,15 +52,13 @@
         }
     </div>
 </div>
-
 @code {
     private string? imgSrc;
     private IBrowserFile? selectedFile;
     private bool isUploading = false;
     private string statusMessage = "";
-    private int uploadProgress = 0; // Для красоты
+    private int uploadProgress = 0;
 
-    // Метод 1: Только предпросмотр
     private async Task HandleFileSelected(InputFileChangeEventArgs e)
     {
         statusMessage = "";
@@ -68,53 +66,59 @@
 
         if (selectedFile != null)
         {
-            // Делаем легкую копию для показа на экране (JPEG)
+            // Создаем превью
             var resizedFile = await selectedFile.RequestImageFileAsync("image/jpeg", 800, 800);
             var buffer = new byte[resizedFile.Size];
-            await resizedFile.OpenReadStream(1024 * 1024 * 15).ReadAsync(buffer);
+            using (var stream = resizedFile.OpenReadStream(1024 * 1024 * 5))
+            {
+                await stream.ReadAsync(buffer);
+            }
 
             imgSrc = $"data:image/jpeg;base64,{Convert.ToBase64String(buffer)}";
             StateHasChanged();
         }
     }
 
-    // Метод 2: Сама отправка
     private async Task UploadToServer()
     {
         if (selectedFile == null) return;
 
         isUploading = true;
-        statusMessage = "Momentje...";
-        uploadProgress = 10;
+        statusMessage = "Verzenden naar het bal...";
+        uploadProgress = 20;
         StateHasChanged();
 
         try
         {
             using var content = new MultipartFormDataContent();
-            // Отправляем оригинальный файл (или можно тоже уменьшенный для скорости)
+
+            // maxAllowedSize должен быть достаточным для фото (например, 15MB)
             var fileContent = new StreamContent(selectedFile.OpenReadStream(1024 * 1024 * 15));
+
+            // Ключ "file" должен точно совпадать с именем переменной в C# контроллере друга
             content.Add(fileContent, "file", selectedFile.Name);
 
-            uploadProgress = 50;
+            uploadProgress = 60;
+            StateHasChanged();
 
-            //  ik heb API route aangepast naar api/photo/upload
-            var response = await Http.PostAsync("api/photo/upload", content);
+            // ВАЖНО: Проверь, чтобы адрес совпадал с контроллером (api/Photo/upload)
+            var response = await Http.PostAsync("api/Photo/upload", content);
 
             if (response.IsSuccessStatusCode)
             {
                 uploadProgress = 100;
-                statusMessage = "✅ Gelukt!";
+                statusMessage = "✅ Foto succesvol gedeeld!";
                 await Task.Delay(2000);
                 CancelSelection();
             }
             else
             {
-                statusMessage = "❌ Er is iets misgegaan.";
+                statusMessage = "❌ Server fout: " + response.StatusCode;
             }
         }
         catch (Exception ex)
         {
-            statusMessage = "❌ Er is iets mis gegaan.";
+            statusMessage = "❌ Verbindingsfout.";
             Console.WriteLine(ex.Message);
         }
         finally
