@@ -1,0 +1,6 @@
+@PromAPI_HostAddress = http://localhost:5036
+
+GET {{PromAPI_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

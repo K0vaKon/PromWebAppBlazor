@@ -4,7 +4,7 @@
 
 <div id="WebApp">
     <div id="HomeTop">
-        <h1>Welkom op de bal!</h1>
+        <h1>Welkom op het bal!</h1>
     </div>
 
     <div id="content">
@@ -96,7 +96,9 @@
             content.Add(fileContent, "file", selectedFile.Name);
 
             uploadProgress = 50;
-            var response = await Http.PostAsync("api/upload", content);
+
+            //  ik heb API route aangepast naar api/photo/upload
+            var response = await Http.PostAsync("api/photo/upload", content);
 
             if (response.IsSuccessStatusCode)
             {
@@ -107,7 +109,7 @@
             }
             else
             {
-                statusMessage = "❌ Er is iets mis gegaan.";
+                statusMessage = "❌ Er is iets misgegaan.";
             }
         }
         catch (Exception ex)
