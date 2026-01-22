@@ -7,5 +7,7 @@
         public string Url { get; set; } = string.Empty;
         public DateTime Tijd { get; set; }
         public string Gebruiker { get; set; } = string.Empty;
+
+        public string Email { get; set; } = string.Empty;
     }
 }
