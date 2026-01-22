@@ -34,11 +34,11 @@
 @code {
     private bool collapseNavMenu = true;
 
-    // Этот класс будет добавлять 'collapse', когда меню закрыто
     private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
 
     private void ToggleNavMenu()
     {
         collapseNavMenu = !collapseNavMenu;
+        StateHasChanged(); // Форсируем обновление интерфейса
     }
 }
