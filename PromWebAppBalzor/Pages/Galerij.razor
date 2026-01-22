@@ -3,30 +3,17 @@
 
 <h3>Galerij</h3>
 
-@if (photos == null)
-{
-    <p>Laden...</p>
-}
-else if (!photos.Any())
-{
-    <p>Geen foto’s beschikbaar.</p>
-}
-else
-{
-    <div style="display:flex; flex-wrap:wrap;">
-        @foreach (var photo in photos)
-        {
-            <img src="@photo" width="200" style="margin:5px" />
-        }
+
+    <div class="voorbeeldBlock_foto">
+        <img src="/favicon.png" alt="Alternate Text" />
     </div>
-}
+
+    <div class="voorbeeldBlock_foto">
+        <img src="/favicon.png" alt="Alternate Text" />
+    </div>
+</div>
 
 @code {
-    List<string>? photos;
 
-    protected override async Task OnInitializedAsync()
-    {
-        photos = await Http.GetFromJsonAsync<List<string>>("api/photo");
-    }
 }
 

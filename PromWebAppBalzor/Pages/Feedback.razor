@@ -1,0 +1,74 @@
+﻿@page "/feedback"
+@inject HttpClient Http
+
+<div id="WebApp">
+    <div id="HomeTop">
+        <h1>Feedback</h1>
+        <p>Wat vind je van de app?</p>
+    </div>
+
+    <div id="content" class="centralize">
+        @if (!submitted)
+        {
+            <div class="feedback-form">
+                <textarea @bind="feedbackText"
+                          placeholder="Typ hier je bericht..."
+                          class="feedback-input">
+                    </textarea>
+
+                <button class="btn-confirm" @onclick="SendFeedback" disabled="@string.IsNullOrWhiteSpace(feedbackText)">
+                    VERZENDEN
+                </button>
+            </div>
+        }
+        else
+        {
+            <div class="preview-animation">
+                <i class="bi bi-check-circle-fill" style="font-size: 3rem; color: #D4AF37;"></i>
+                <p class="photo-hint">Bedankt voor je bericht!</p>
+                <button class="btn-upload" @onclick="() => submitted = false">NIEUW BERICHT</button>
+            </div>
+        }
+
+        @if (isSending)
+        {
+            <div class="loader-wrapper">
+                <div class="spinner"></div>
+                <p>Verzenden...</p>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    private string feedbackText = "";
+    private bool isSending = false;
+    private bool submitted = false;
+
+    private async Task SendFeedback()
+    {
+        if (string.IsNullOrWhiteSpace(feedbackText)) return;
+
+        isSending = true;
+        try
+        {
+            // Отправляем текст как обычную строку или JSON
+            var response = await Http.PostAsJsonAsync("api/feedback", feedbackText);
+
+            if (response.IsSuccessStatusCode)
+            {
+                submitted = true;
+                feedbackText = "";
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
+        }
+        finally
+        {
+            isSending = false;
+        }
+    }
+}
+
