@@ -102,7 +102,7 @@
             StateHasChanged();
 
             // ВАЖНО: Проверь, чтобы адрес совпадал с контроллером (api/Photo/upload)
-            var response = await Http.PostAsync("http://localhost:5036/api/Photo/upload", content);
+            var response = await Http.PostAsync("http://localhost:5097/api/Photo/upload", content);
 
             if (response.IsSuccessStatusCode)
             {
