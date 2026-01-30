@@ -3,34 +3,34 @@ var builder = WebApplication.CreateBuilder(args);
 // 1️⃣ Services
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(); // 🔹 moet hier staan
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("BlazorClient", policy =>
+builder.Services.AddSwaggerGen();
+
+// Упрощенный CORS: разрешаем всё всем
+builder.Services.AddCors(options => {
+    options.AddDefaultPolicy(policy => {
         policy.AllowAnyOrigin()
               .AllowAnyHeader()
-              .AllowAnyMethod());
+              .AllowAnyMethod();
+    });
 });
 
 var app = builder.Build();
 
 // 2️⃣ Middleware pipeline
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();        // 🔹 maakt /swagger beschikbaar
-    app.UseSwaggerUI();
-}
+// ВЫНЕСЛИ Swagger из if, чтобы он работал на сервере!
+app.UseSwagger();
+app.UseSwaggerUI();
 
-app.UseHttpsRedirection();
+// ⚠️ На сервере Ubuntu лучше закомментировать UseHttpsRedirection, 
+// если ты еще не настроил SSL сертификаты, иначе запросы могут блокироваться
+// app.UseHttpsRedirection();
 
-// ⚡ Zorg dat StaticFiles vóór MapControllers
 app.UseStaticFiles();
 
-// ⚡ CORS moet vóór MapControllers
-app.UseCors("BlazorClient");
+// Используем политику по умолчанию
+app.UseCors();
 
 app.UseAuthorization();
-
 app.MapControllers();
 
 app.Run();
