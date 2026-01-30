@@ -15,18 +15,20 @@ public class PhotoController : ControllerBase
     [HttpPost("upload")]
     public async Task<IActionResult> Upload(IFormFile file)
     {
-        // Путь будет: ТвойПроект/wwwroot/uploads
-        var uploads = Path.Combine(_env.WebRootPath, "uploads");
+        if (file == null) return BadRequest("Файла нет");
 
-        if (!Directory.Exists(uploads)) Directory.CreateDirectory(uploads);
+        // Используем путь именно к wwwroot
+        var uploadsPath = Path.Combine(_env.WebRootPath, "uploads");
 
-        var path = Path.Combine(uploads, file.FileName);
+        if (!Directory.Exists(uploadsPath))
+            Directory.CreateDirectory(uploadsPath);
+
+        var path = Path.Combine(uploadsPath, file.FileName);
 
         using (var stream = new FileStream(path, FileMode.Create))
         {
             await file.CopyToAsync(stream);
         }
-
         return Ok();
     }
 }

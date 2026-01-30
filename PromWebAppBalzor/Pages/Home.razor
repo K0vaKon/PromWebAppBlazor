@@ -8,7 +8,7 @@
     </div>
 
     <div id="content">
-        @* Foto kiezen *@
+        @* Выбор фото *@
         @if (imgSrc == null)
         {
             <label class="btn-upload">
@@ -17,7 +17,7 @@
             </label>
         }
 
-        @* Confirm button *@
+        @* Превью и кнопки *@
         @if (imgSrc != null)
         {
             <div class="preview-animation text-center">
@@ -37,7 +37,7 @@
             </div>
         }
 
-        @* Loading status *@
+        @* Статус загрузки *@
         @if (isUploading)
         {
             <div class="loader-container centralize">
@@ -52,9 +52,11 @@
         }
     </div>
 </div>
+
 @code {
     private string? imgSrc;
-    private IBrowserFile? selectedFile;
+    private byte[]? fileBytes; // Сохраняем байты здесь, чтобы избежать ошибки _blazorFilesById
+    private string? fileName;
     private bool isUploading = false;
     private string statusMessage = "";
     private int uploadProgress = 0;
@@ -62,64 +64,67 @@
     private async Task HandleFileSelected(InputFileChangeEventArgs e)
     {
         statusMessage = "";
-        selectedFile = e.File;
+        var file = e.File;
 
-        if (selectedFile != null)
+        if (file != null)
         {
-            // Создаем превью
-            var resizedFile = await selectedFile.RequestImageFileAsync("image/jpeg", 800, 800);
-            var buffer = new byte[resizedFile.Size];
-            using (var stream = resizedFile.OpenReadStream(1024 * 1024 * 5))
+            try
             {
-                await stream.ReadAsync(buffer);
-            }
+                // Сразу считываем файл в массив байтов (макс. 15МБ)
+                using var stream = file.OpenReadStream(1024 * 1024 * 15);
+                fileBytes = new byte[file.Size];
+                await stream.ReadAsync(fileBytes);
+                fileName = file.Name;
 
-            imgSrc = $"data:image/jpeg;base64,{Convert.ToBase64String(buffer)}";
-            StateHasChanged();
+                // Создаем превью из байтов
+                imgSrc = $"data:{file.ContentType};base64,{Convert.ToBase64String(fileBytes)}";
+                StateHasChanged();
+            }
+            catch (Exception ex)
+            {
+                statusMessage = "Fout при загрузке файла.";
+                Console.WriteLine(ex.Message);
+            }
         }
     }
 
     private async Task UploadToServer()
     {
-        if (selectedFile == null) return;
+        if (fileBytes == null) return;
 
         isUploading = true;
         statusMessage = "Verzenden naar het bal...";
         uploadProgress = 20;
-        StateHasChanged();
+        StateHasChanged(); // Форсируем обновление, чтобы появилась надпись "Verzenden..."
 
         try
         {
             using var content = new MultipartFormDataContent();
+            var fileContent = new ByteArrayContent(fileBytes);
+            content.Add(fileContent, "file", fileName ?? "image.jpg");
 
-            // maxAllowedSize должен быть достаточным для фото (например, 15MB)
-            var fileContent = new StreamContent(selectedFile.OpenReadStream(1024 * 1024 * 15));
-
-            // Ключ "file" должен точно совпадать с именем переменной в C# контроллере друга
-            content.Add(fileContent, "file", selectedFile.Name);
-
-            uploadProgress = 60;
-            StateHasChanged();
-
-            // ВАЖНО: Проверь, чтобы адрес совпадал с контроллером (api/Photo/upload)
-            var response = await Http.PostAsync("http://localhost:5097/api/Photo/upload", content);
+            var response = await Http.PostAsync("http://localhost:5036/api/Photo/upload", content);
 
             if (response.IsSuccessStatusCode)
             {
                 uploadProgress = 100;
                 statusMessage = "✅ Foto succesvol gedeeld!";
-                await Task.Delay(2000);
+                StateHasChanged(); // ВАЖНО: Форсируем обновление, чтобы показать успех
+
+                await Task.Delay(3000); // Ждем 3 секунды, чтобы ты успел прочитать сообщение
                 CancelSelection();
             }
             else
             {
                 statusMessage = "❌ Server fout: " + response.StatusCode;
+                StateHasChanged();
             }
         }
         catch (Exception ex)
         {
             statusMessage = "❌ Verbindingsfout.";
-            Console.WriteLine(ex.Message);
+            Console.WriteLine(ex.ToString());
+            StateHasChanged();
         }
         finally
         {
@@ -131,7 +136,8 @@
     private void CancelSelection()
     {
         imgSrc = null;
-        selectedFile = null;
+        fileBytes = null;
+        fileName = null;
         statusMessage = "";
         uploadProgress = 0;
     }

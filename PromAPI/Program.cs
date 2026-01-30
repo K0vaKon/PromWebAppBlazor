@@ -1,20 +1,21 @@
 var builder = WebApplication.CreateBuilder(args);
 
-// 1. Добавляем политику CORS
+// 1. Настраиваем политику
 builder.Services.AddCors(options =>
 {
-    options.AddDefaultPolicy(policy =>
+    options.AddPolicy("AllowAll", policy =>
     {
-        policy.AllowAnyOrigin() // Разрешаем запросы с любого адреса
+        policy.AllowAnyOrigin()
               .AllowAnyMethod()
               .AllowAnyHeader();
     });
 });
 
+builder.Services.AddControllers();
 var app = builder.Build();
 
-// 2. ВКЛЮЧАЕМ (это должно быть выше чем MapControllers)
-app.UseCors();
+// 2. Включаем её СТРОГО перед MapControllers
+app.UseCors("AllowAll");
 
 app.UseStaticFiles();
 app.MapControllers();
