@@ -1,36 +1,21 @@
 var builder = WebApplication.CreateBuilder(args);
 
-// 1️⃣ Services
-builder.Services.AddControllers();
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
-
-// Упрощенный CORS: разрешаем всё всем
-builder.Services.AddCors(options => {
-    options.AddDefaultPolicy(policy => {
-        policy.AllowAnyOrigin()
-              .AllowAnyHeader()
-              .AllowAnyMethod();
+// 1. Добавляем политику CORS
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.AllowAnyOrigin() // Разрешаем запросы с любого адреса
+              .AllowAnyMethod()
+              .AllowAnyHeader();
     });
 });
 
 var app = builder.Build();
 
-// 2️⃣ Middleware pipeline
-// ВЫНЕСЛИ Swagger из if, чтобы он работал на сервере!
-app.UseSwagger();
-app.UseSwaggerUI();
-
-// ⚠️ На сервере Ubuntu лучше закомментировать UseHttpsRedirection, 
-// если ты еще не настроил SSL сертификаты, иначе запросы могут блокироваться
-// app.UseHttpsRedirection();
-
-app.UseStaticFiles();
-
-// Используем политику по умолчанию
+// 2. ВКЛЮЧАЕМ (это должно быть выше чем MapControllers)
 app.UseCors();
 
-app.UseAuthorization();
+app.UseStaticFiles();
 app.MapControllers();
-
 app.Run();
