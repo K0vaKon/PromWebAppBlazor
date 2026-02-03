@@ -35,11 +35,14 @@ public class PhotoController : ControllerBase
     [HttpGet]
     public IActionResult GetPhotos()
     {
-        var folderPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
-        if (!Directory.Exists(folderPath)) return Ok(new List<string>());
+        // Теперь смотрим в папку approved!
+        var path = Path.Combine(_env.WebRootPath, "approved");
 
-        // Получаем список имен файлов из папки
-        var files = Directory.GetFiles(folderPath)
+        // Если папки еще нет (ни одно фото не одобрено), возвращаем пустой список
+        if (!Directory.Exists(path))
+            return Ok(new List<string>());
+
+        var files = Directory.GetFiles(path)
                              .Select(Path.GetFileName)
                              .ToList();
 
