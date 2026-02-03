@@ -2,7 +2,7 @@
 @inject HttpClient Http
 
 <div class="container text-center">
-    <h2 class="mt-4 mb-4">Bal Foto's</h2>
+    <h1 class="mt-4 mb-4">Bal Foto's</h1>
 
     @if (photos == null)
     {
@@ -14,13 +14,19 @@
     }
     else
     {
-        <div class="row">
+        <div class="pinterest-grid">
             @foreach (var photo in photos)
             {
-                <div class="col-6 col-md-4 col-lg-3 mb-4">
+                <div class="pinterest-item">
                     <div class="card shadow-sm">
-                        @* Путь теперь ведет в approved *@
-                        <img src="http://localhost:5036/approved/@photo" class="card-img-top img-thumbnail" alt="Bal foto" />
+                        <img src="http://localhost:5036/approved/@photo"
+                             class="card-img-top"
+                             alt="Bal foto" />
+
+                        @* Опционально: подпись *@
+                        <div class="card-body p-2 text-center">
+                            <small class="text-muted">@photo</small>
+                        </div>
                     </div>
                 </div>
             }

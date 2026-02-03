@@ -1,8 +1,10 @@
 ﻿body {
 }
 
-h3 {
+h1 {
+    width: 100%;
     text-align: center;
+    padding: 20px 0;
     font-size: 2.5rem;
     font-weight: 900;
     text-shadow: 1px 1px 2px rgba(0,0,0,0.2)
@@ -13,14 +15,53 @@ h3 {
     display: grid; 
 }
 
-.voorbeeldBlock_foto {
-    border: 1px medium;
-    border-radius: 10px;
+/* Контейнер сетки */
+.pinterest-grid {
+    column-count: 4; /* Количество колонок для больших экранов */
+    column-gap: 1.5rem; /* Расстояние между колонками */
+    width: 100%;
+    padding: 15px;
 }
 
-.voorbeeldBlock_foto img {
-    width: 150px;
-    height: 150px;
-    border: 2px solid; 
-    border-radius: 10px;
+/* Элемент сетки */
+.pinterest-item {
+    display: inline-block; /* Важно, чтобы карточки не разрывались между колонками */
+    width: 100%;
+    margin-bottom: 1.5rem; /* Отступ снизу между фото */
+}
+
+.card {
+    transition: transform 0.3s ease;
+    border-radius: 12px;
+    overflow: hidden;
+    border: none;
+}
+
+.card-img-top {
+    width: 100%;
+    height: auto; /* Сохраняет пропорции фото */
+    display: block;
+}
+
+.card:hover {
+    transform: scale(1.02);
+}
+
+/* Адаптивность */
+@media (max-width: 1200px) {
+    .pinterest-grid {
+        column-count: 3;
+    }
+}
+
+@media (max-width: 768px) {
+    .pinterest-grid {
+        column-count: 2;
+    }
+}
+
+@media (max-width: 480px) {
+    .pinterest-grid {
+        column-count: 1;
+    }
 }
