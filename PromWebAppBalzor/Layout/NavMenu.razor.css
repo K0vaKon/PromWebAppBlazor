@@ -105,3 +105,7 @@
         overflow-y: auto;
     }
 }
+
+.collapse.show {
+    display: block !important;
+}

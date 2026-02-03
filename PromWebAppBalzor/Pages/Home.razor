@@ -21,7 +21,7 @@
         @if (imgSrc != null)
         {
             <div class="preview-animation text-center">
-                <img src="@imgSrc" class="img-preview" style="max-width: 100%; border-radius: 15px;" />
+                <img src="@imgSrc" class="img-preview" style="max-width: auto; border-radius: 15px;" />
 
                 @if (!isUploading)
                 {
@@ -95,7 +95,7 @@
         isUploading = true;
         statusMessage = "Verzenden naar het bal...";
         uploadProgress = 20;
-        StateHasChanged(); // Форсируем обновление, чтобы появилась надпись "Verzenden..."
+        StateHasChanged(); 
 
         try
         {

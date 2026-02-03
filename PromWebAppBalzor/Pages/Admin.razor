@@ -1,0 +1,61 @@
+﻿@page "/admin-panel"
+@inject HttpClient Http
+
+<div class="admin-container">
+    <h3>Admin panel (@(pendingPhotos?.Count ?? 0))</h3>
+
+    @if (pendingPhotos == null)
+    {
+        <div class="spinner-border text-primary" role="status"></div>
+    }
+    else
+    {
+        <div class="photo-grid">
+            @foreach (var photo in pendingPhotos)
+            {
+                <div class="photo-card">
+                    <div class="photo-wrapper">
+                        @* 1. loading="lazy" — браузер грузит фото только при скролле *@
+                        @* 2. decodings="async" — не тормозит интерфейс при обработке картинки *@
+                        <img src="http://localhost:5036/uploads/@photo"
+                             loading="lazy"
+                             decoding="async"
+                             alt="Pending photo" />
+                    </div>
+                    <div class="photo-info">
+                        <span class="user-name">👤 @photo</span>
+                    </div>
+                    <div class="actions">
+                        <button class="btn-approve" @onclick="() => Approve(photo)">Approve</button>
+                        <button class="btn-reject" @onclick="() => Reject(photo)">Reject</button>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    private List<string> pendingPhotos = new List<string>();
+
+    protected override async Task OnInitializedAsync() => await LoadPending();
+
+    async Task LoadPending() =>
+        pendingPhotos = await Http.GetFromJsonAsync<List<string>>("http://localhost:5036/api/Photo/pending");
+
+    async Task Approve(string name)
+    {
+        var response = await Http.PostAsync($"http://localhost:5036/api/Photo/approve/{name}", null);
+        if (response.IsSuccessStatusCode)
+        {
+            // УДАЛЯЕМ ЛОКАЛЬНО: Это убирает лаг «перезагрузки» всей страницы
+            pendingPhotos?.Remove(name);
+        }
+    }
+
+    async Task Reject(string name)
+    {
+        // Логика удаления...
+        pendingPhotos?.Remove(name);
+    }
+}
