@@ -1,5 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using PhotoPromAPI.Models;
+using PhotoPromAPI.Models; // Ensure you have this namespace or remove if not used yet
 
 [ApiController]
 [Route("api/[controller]")]
@@ -9,15 +9,15 @@ public class PhotoController : ControllerBase
 
     public PhotoController(IWebHostEnvironment env)
     {
-        _env = env; // Это позволяет получить путь к wwwroot автоматически
+        _env = env; // This allows getting the path to wwwroot automatically
     }
 
     [HttpPost("upload")]
     public async Task<IActionResult> Upload(IFormFile file)
     {
-        if (file == null) return BadRequest("Файла нет");
+        if (file == null) return BadRequest("File is missing");
 
-        // Используем путь именно к wwwroot
+        // Use the path specifically to wwwroot/uploads
         var uploadsPath = Path.Combine(_env.WebRootPath, "uploads");
 
         if (!Directory.Exists(uploadsPath))
@@ -35,10 +35,10 @@ public class PhotoController : ControllerBase
     [HttpGet]
     public IActionResult GetPhotos()
     {
-        // Теперь смотрим в папку approved!
+        // Now looking into the approved folder!
         var path = Path.Combine(_env.WebRootPath, "approved");
 
-        // Если папки еще нет (ни одно фото не одобрено), возвращаем пустой список
+        // If the folder doesn't exist yet (no photos approved), return an empty list
         if (!Directory.Exists(path))
             return Ok(new List<string>());
 
@@ -52,7 +52,7 @@ public class PhotoController : ControllerBase
     [HttpGet("pending")]
     public IActionResult GetPendingPhotos()
     {
-        // Проверь, что _env не равен null
+        // Check that _env is not null
         if (_env.WebRootPath == null)
         {
             return BadRequest("WebRootPath is not configured");
@@ -72,19 +72,40 @@ public class PhotoController : ControllerBase
         return Ok(files);
     }
 
-    // Метод для одобрения: переносит файл из uploads в approved
+    // Method for approval: moves file from uploads to approved
     [HttpPost("approve/{fileName}")]
     public IActionResult ApprovePhoto(string fileName)
     {
-        var sourcePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", fileName);
-        var destPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "approved", fileName);
+        // It is better to use _env.WebRootPath instead of Directory.GetCurrentDirectory() for consistency
+        var sourcePath = Path.Combine(_env.WebRootPath, "uploads", fileName);
+        var destPath = Path.Combine(_env.WebRootPath, "approved", fileName);
 
         if (System.IO.File.Exists(sourcePath))
         {
-            // Создаем папку approved, если её нет
-            Directory.CreateDirectory(Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "approved"));
+            // Create approved folder if it doesn't exist
+            var approvedDir = Path.Combine(_env.WebRootPath, "approved");
+            if (!Directory.Exists(approvedDir)) Directory.CreateDirectory(approvedDir);
 
-            System.IO.File.Move(sourcePath, destPath); // Перемещаем файл
+            System.IO.File.Move(sourcePath, destPath); // Move the file
+            return Ok();
+        }
+        return NotFound();
+    }
+
+    // Method for rejection: moves file from uploads to rejected
+    [HttpPost("reject/{fileName}")]
+    public IActionResult RejectPhoto(string fileName)
+    {
+        var sourcePath = Path.Combine(_env.WebRootPath, "uploads", fileName);
+        var destPath = Path.Combine(_env.WebRootPath, "rejected", fileName);
+
+        if (System.IO.File.Exists(sourcePath))
+        {
+            // Create rejected folder if it doesn't exist
+            var rejectedDir = Path.Combine(_env.WebRootPath, "rejected");
+            if (!Directory.Exists(rejectedDir)) Directory.CreateDirectory(rejectedDir);
+
+            System.IO.File.Move(sourcePath, destPath); // Move the file
             return Ok();
         }
         return NotFound();

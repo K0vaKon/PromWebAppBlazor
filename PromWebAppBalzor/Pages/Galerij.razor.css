@@ -15,19 +15,17 @@ h1 {
     display: grid; 
 }
 
-/* Контейнер сетки */
 .pinterest-grid {
-    column-count: 4; /* Количество колонок для больших экранов */
-    column-gap: 1.5rem; /* Расстояние между колонками */
+    column-count: 4; 
+    column-gap: 1.5rem; 
     width: 100%;
     padding: 15px;
 }
 
-/* Элемент сетки */
 .pinterest-item {
-    display: inline-block; /* Важно, чтобы карточки не разрывались между колонками */
+    display: inline-block;
     width: 100%;
-    margin-bottom: 1.5rem; /* Отступ снизу между фото */
+    margin-bottom: 1.5rem;
 }
 
 .card {
@@ -39,7 +37,7 @@ h1 {
 
 .card-img-top {
     width: 100%;
-    height: auto; /* Сохраняет пропорции фото */
+    height: auto;
     display: block;
 }
 
@@ -47,7 +45,6 @@ h1 {
     transform: scale(1.02);
 }
 
-/* Адаптивность */
 @media (max-width: 1200px) {
     .pinterest-grid {
         column-count: 3;

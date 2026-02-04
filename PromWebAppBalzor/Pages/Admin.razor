@@ -15,8 +15,8 @@
             {
                 <div class="photo-card">
                     <div class="photo-wrapper">
-                        @* 1. loading="lazy" — браузер грузит фото только при скролле *@
-                        @* 2. decodings="async" — не тормозит интерфейс при обработке картинки *@
+                        @* 1. loading="lazy" — browser loads photo only when scrolling *@
+                        @* 2. decodings="async" — does not block the UI while processing the image *@
                         <img src="http://localhost:5036/uploads/@photo"
                              loading="lazy"
                              decoding="async"
@@ -48,14 +48,23 @@
         var response = await Http.PostAsync($"http://localhost:5036/api/Photo/approve/{name}", null);
         if (response.IsSuccessStatusCode)
         {
-            // УДАЛЯЕМ ЛОКАЛЬНО: Это убирает лаг «перезагрузки» всей страницы
             pendingPhotos?.Remove(name);
         }
     }
 
     async Task Reject(string name)
     {
-        // Логика удаления...
-        pendingPhotos?.Remove(name);
+        // FIXED: Changed "rejected" to "reject" to match the Controller route
+        var response = await Http.PostAsync($"http://localhost:5036/api/Photo/reject/{name}", null);
+
+        if (response.IsSuccessStatusCode)
+        {
+            pendingPhotos?.Remove(name);
+        }
+        else
+        {
+            // Log error to console for debugging
+            Console.WriteLine($"Reject failed with status: {response.StatusCode}");
+        }
     }
 }
