@@ -1,31 +1,41 @@
 ﻿@page "/galerij"
+@using PromWebAppBalzor.Models
+@using System.Text.Json
 @inject HttpClient Http
 
 <div class="container text-center">
     <h1 class="mt-4 mb-4">Bal Foto's</h1>
 
-    @if (photos == null)
+    @if (errorMessage != null)
+    {
+        <div class="alert alert-danger">
+            <strong>Ошибка связи с сервером:</strong> @errorMessage
+        </div>
+    }
+
+    @if (photos == null && errorMessage == null)
     {
         <div class="spinner-border text-primary" role="status"></div>
+        <p>Laden...</p>
     }
-    else if (!photos.Any())
+    else if (photos != null && !photos.Any())
     {
-        <p>Er zijn nog geen foto's geüpload...</p>
+        <p>Er zijn еще geen foto's geüpload...</p>
     }
-    else
+    else if (photos != null)
     {
         <div class="pinterest-grid">
             @foreach (var photo in photos)
             {
                 <div class="pinterest-item">
                     <div class="card shadow-sm">
-                        <img src="http://localhost:5036/approved/@photo"
+                        <img src="@($"http://localhost:5036/approved/{photo.FileName}")"
                              class="card-img-top"
                              alt="Bal foto" />
 
-                        @* Опционально: подпись *@
                         <div class="card-body p-2 text-center">
-                            <small class="text-muted">@photo</small>
+                            @* Возвращаем подпись под фото *@
+                            <small class="text-muted">@(photo.Sender?.Name ?? "Anoniem")</small>
                         </div>
                     </div>
                 </div>
@@ -35,18 +45,25 @@
 </div>
 
 @code {
-    private List<string>? photos;
+    private List<Photo>? photos;
+    private string? errorMessage;
 
     protected override async Task OnInitializedAsync()
     {
         try
         {
-            // Спрашиваем список имен файлов у API
-            photos = await Http.GetFromJsonAsync<List<string>>("http://localhost:5036/api/Photo");
+            var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+
+            // Пытаемся получить данные
+            var result = await Http.GetFromJsonAsync<List<Photo>>("http://localhost:5036/api/Photo", options);
+
+            photos = result;
         }
         catch (Exception ex)
         {
-            Console.WriteLine("Fout bij laden галереи: " + ex.Message);
+            // Сохраняем текст ошибки, чтобы увидеть его на экране
+            errorMessage = ex.Message;
+            Console.WriteLine($"Full error info: {ex}");
         }
     }
 }

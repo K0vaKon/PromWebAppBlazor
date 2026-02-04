@@ -1,113 +1,137 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using PhotoPromAPI.Models; // Ensure you have this namespace or remove if not used yet
+using Microsoft.EntityFrameworkCore;
+using PhotoPromAPI.Models;
+using PromAPI.Data;   // Проверь namespace
+using PromAPI.Models; // Проверь namespace
 
 [ApiController]
 [Route("api/[controller]")]
 public class PhotoController : ControllerBase
 {
     private readonly IWebHostEnvironment _env;
+    private readonly AppDbContext _context;
 
-    public PhotoController(IWebHostEnvironment env)
+    public PhotoController(IWebHostEnvironment env, AppDbContext context)
     {
-        _env = env; // This allows getting the path to wwwroot automatically
+        _env = env;
+        _context = context;
     }
 
+    // 1. ЗАГРУЗКА
     [HttpPost("upload")]
     public async Task<IActionResult> Upload(IFormFile file)
     {
         if (file == null) return BadRequest("File is missing");
 
-        // Use the path specifically to wwwroot/uploads
+        // Физическое сохранение
         var uploadsPath = Path.Combine(_env.WebRootPath, "uploads");
-
-        if (!Directory.Exists(uploadsPath))
-            Directory.CreateDirectory(uploadsPath);
+        if (!Directory.Exists(uploadsPath)) Directory.CreateDirectory(uploadsPath);
 
         var path = Path.Combine(uploadsPath, file.FileName);
-
         using (var stream = new FileStream(path, FileMode.Create))
         {
             await file.CopyToAsync(stream);
         }
+
+        // Сохранение в БД
+        // Ищем отправителя или создаем Гостя
+        var defaultSender = await _context.Zenders.FirstOrDefaultAsync();
+        if (defaultSender == null)
+        {
+            defaultSender = new Zender { Name = "Guest", Email = "guest@prombal.com" };
+            _context.Zenders.Add(defaultSender);
+            await _context.SaveChangesAsync();
+        }
+
+        var newPhoto = new Photo
+        {
+            FileName = file.FileName,
+            Tijd = DateTime.Now,
+            IsApproved = 0, // Статус 0 = Ожидает
+            ZenderId = defaultSender.Id
+        };
+
+        _context.Photos.Add(newPhoto);
+        await _context.SaveChangesAsync();
+
         return Ok();
     }
 
+    // 2. ГАЛЕРЕЯ (Только одобренные)
     [HttpGet]
-    public IActionResult GetPhotos()
+    public async Task<IActionResult> GetPhotos()
     {
-        // Now looking into the approved folder!
-        var path = Path.Combine(_env.WebRootPath, "approved");
+        var photos = await _context.Photos
+            .Include(p => p.Sender)
+            .Where(p => p.IsApproved == 1) // Статус 1 = Одобрено
+            .ToListAsync();
 
-        // If the folder doesn't exist yet (no photos approved), return an empty list
-        if (!Directory.Exists(path))
-            return Ok(new List<string>());
-
-        var files = Directory.GetFiles(path)
-                             .Select(Path.GetFileName)
-                             .ToList();
-
-        return Ok(files);
+        return Ok(photos);
     }
 
+    // 3. АДМИНКА (Только ожидающие)
     [HttpGet("pending")]
-    public IActionResult GetPendingPhotos()
+    public async Task<IActionResult> GetPendingPhotos()
     {
-        // Check that _env is not null
-        if (_env.WebRootPath == null)
-        {
-            return BadRequest("WebRootPath is not configured");
-        }
+        var pending = await _context.Photos
+            .Include(p => p.Sender)
+            .Where(p => p.IsApproved == 0) // Статус 0 = Ожидает
+            .ToListAsync();
 
-        var path = Path.Combine(_env.WebRootPath, "uploads");
-
-        if (!Directory.Exists(path))
-        {
-            return Ok(new List<string>());
-        }
-
-        var files = Directory.GetFiles(path)
-                             .Select(Path.GetFileName)
-                             .ToList();
-
-        return Ok(files);
+        return Ok(pending);
     }
 
-    // Method for approval: moves file from uploads to approved
+    // 4. ОДОБРЕНИЕ
     [HttpPost("approve/{fileName}")]
-    public IActionResult ApprovePhoto(string fileName)
+    public async Task<IActionResult> ApprovePhoto(string fileName)
     {
-        // It is better to use _env.WebRootPath instead of Directory.GetCurrentDirectory() for consistency
+        // Перемещение файла
         var sourcePath = Path.Combine(_env.WebRootPath, "uploads", fileName);
         var destPath = Path.Combine(_env.WebRootPath, "approved", fileName);
 
         if (System.IO.File.Exists(sourcePath))
         {
-            // Create approved folder if it doesn't exist
             var approvedDir = Path.Combine(_env.WebRootPath, "approved");
             if (!Directory.Exists(approvedDir)) Directory.CreateDirectory(approvedDir);
-
-            System.IO.File.Move(sourcePath, destPath); // Move the file
-            return Ok();
+            System.IO.File.Move(sourcePath, destPath);
         }
-        return NotFound();
+
+        // Обновление БД
+        var photo = await _context.Photos.FirstOrDefaultAsync(p => p.FileName == fileName);
+        if (photo != null)
+        {
+            photo.IsApproved = 1; // Ставим статус 1
+            await _context.SaveChangesAsync();
+        }
+
+        return Ok();
     }
 
-    // Method for rejection: moves file from uploads to rejected
+    // 5. ОТКЛОНЕНИЕ (ИЗМЕНЕНО: теперь не удаляем запись)
     [HttpPost("reject/{fileName}")]
-    public IActionResult RejectPhoto(string fileName)
+    public async Task<IActionResult> RejectPhoto(string fileName)
     {
+        // Перемещение файла в папку rejected
         var sourcePath = Path.Combine(_env.WebRootPath, "uploads", fileName);
         var destPath = Path.Combine(_env.WebRootPath, "rejected", fileName);
 
         if (System.IO.File.Exists(sourcePath))
         {
-            // Create rejected folder if it doesn't exist
             var rejectedDir = Path.Combine(_env.WebRootPath, "rejected");
             if (!Directory.Exists(rejectedDir)) Directory.CreateDirectory(rejectedDir);
-
-            System.IO.File.Move(sourcePath, destPath); // Move the file
-            return Ok();
+            System.IO.File.Move(sourcePath, destPath);
         }
-        return NotFound();
+
+        // Обновление БД
+        var photo = await _context.Photos.FirstOrDefaultAsync(p => p.FileName == fileName);
+        if (photo != null)
+        {
+            // МЫ НЕ УДАЛЯЕМ ЗАПИСЬ!
+            // Мы просто ставим статус "Отклонено" (например, цифра 2)
+            photo.IsApproved = 2;
+            await _context.SaveChangesAsync();
+        }
+
+        return Ok();
     }
 }

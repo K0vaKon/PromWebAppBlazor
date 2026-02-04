@@ -1,5 +1,6 @@
 ﻿@page "/admin-panel"
 @inject HttpClient Http
+@using PromWebAppBalzor.Models
 
 <div class="admin-container">
     <h3>Admin panel (@(pendingPhotos?.Count ?? 0))</h3>
@@ -8,6 +9,10 @@
     {
         <div class="spinner-border text-primary" role="status"></div>
     }
+    else if (pendingPhotos.Count == 0)
+    {
+        <p>No pending photos.</p>
+    }
     else
     {
         <div class="photo-grid">
@@ -15,17 +20,26 @@
             {
                 <div class="photo-card">
                     <div class="photo-wrapper">
-                        @* 1. loading="lazy" — browser loads photo only when scrolling *@
-                        @* 2. decodings="async" — does not block the UI while processing the image *@
-                        <img src="http://localhost:5036/uploads/@photo"
+                        @* ТЕПЕРЬ ВАЖНО: Используем photo.FileName *@
+                        <img src="@($"http://localhost:5036/uploads/{photo.FileName}")"
                              loading="lazy"
                              decoding="async"
                              alt="Pending photo" />
                     </div>
+
                     <div class="photo-info">
-                        <span class="user-name">👤 @photo</span>
+                        @* ТЕПЕРЬ ВАЖНО: Выводим имя автора из базы *@
+                        <span class="user-name">
+                            👤 @(photo.Sender?.Name ?? "Unknown")
+                        </span>
+                        <br />
+                        <small style="color: gray; font-size: 0.8em;">
+                            @photo.Tijd.ToString("dd.MM.yyyy HH:mm")
+                        </small>
                     </div>
+
                     <div class="actions">
+                        @* Передаем весь объект photo *@
                         <button class="btn-approve" @onclick="() => Approve(photo)">Approve</button>
                         <button class="btn-reject" @onclick="() => Reject(photo)">Reject</button>
                     </div>
@@ -36,35 +50,47 @@
 </div>
 
 @code {
-    private List<string> pendingPhotos = new List<string>();
+    // 1. ИЗМЕНЕНИЕ: Теперь это список объектов Photo, а не string
+    private List<Photo>? pendingPhotos;
 
-    protected override async Task OnInitializedAsync() => await LoadPending();
-
-    async Task LoadPending() =>
-        pendingPhotos = await Http.GetFromJsonAsync<List<string>>("http://localhost:5036/api/Photo/pending");
-
-    async Task Approve(string name)
+    protected override async Task OnInitializedAsync()
     {
-        var response = await Http.PostAsync($"http://localhost:5036/api/Photo/approve/{name}", null);
-        if (response.IsSuccessStatusCode)
+        await LoadPending();
+    }
+
+    async Task LoadPending()
+    {
+        try
         {
-            pendingPhotos?.Remove(name);
+            // 2. ИЗМЕНЕНИЕ: Читаем JSON как список объектов
+            pendingPhotos = await Http.GetFromJsonAsync<List<Photo>>("http://localhost:5036/api/Photo/pending");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading photos: {ex.Message}");
         }
     }
 
-    async Task Reject(string name)
+    // 3. ИЗМЕНЕНИЕ: Метод принимает объект Photo
+    async Task Approve(Photo photo)
     {
-        // FIXED: Changed "rejected" to "reject" to match the Controller route
-        var response = await Http.PostAsync($"http://localhost:5036/api/Photo/reject/{name}", null);
-
+        var response = await Http.PostAsync($"http://localhost:5036/api/Photo/approve/{photo.FileName}", null);
         if (response.IsSuccessStatusCode)
         {
-            pendingPhotos?.Remove(name);
+            pendingPhotos?.Remove(photo);
+        }
+    }
+
+    async Task Reject(Photo photo)
+    {
+        var response = await Http.PostAsync($"http://localhost:5036/api/Photo/reject/{photo.FileName}", null);
+        if (response.IsSuccessStatusCode)
+        {
+            pendingPhotos?.Remove(photo);
         }
         else
         {
-            // Log error to console for debugging
-            Console.WriteLine($"Reject failed with status: {response.StatusCode}");
+            Console.WriteLine($"Reject failed: {response.StatusCode}");
         }
     }
 }
